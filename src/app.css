@@ -1,14 +1,29 @@
+/* ========================================
+   DESIGN SYSTEM — Premium Multi-Theme
+   ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
 :root {
   /* Default / Dashboard (Premium Indigo/Dark) */
   --bg-color: #0b0f19;
   --surface-color: rgba(23, 28, 40, 0.6);
   --surface-hover: rgba(30, 36, 52, 0.8);
+  --surface-high: rgba(42, 42, 43, 0.8);
+  --surface-low: rgba(28, 27, 28, 0.6);
+  --surface-bright: rgba(58, 57, 58, 0.6);
   --border-color: rgba(255, 255, 255, 0.08);
-  --primary-color: #6366f1; /* Indigo */
+  --primary-color: #6366f1;
   --primary-hover: #4f46e5;
-  --secondary-color: #ec4899; /* Pink */
+  --primary-container: #6366f1;
+  --secondary-color: #ec4899;
+  --secondary-container: #ec4899;
+  --tertiary-color: #10b981;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
+  --text-on-primary: #ffffff;
   --danger-color: #ef4444;
   --success-color: #10b981;
   --warning-color: #f59e0b;
@@ -16,68 +31,124 @@
   /* Typography & Effects */
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   --font-size-base: 16px;
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  --glass-blur: blur(12px);
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --spacing-2xl: 48px;
+  --glass-blur: blur(16px);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px;
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --gradient-bg: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
+  --gradient-bg: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
+                 radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
   --primary-glow: rgba(99, 102, 241, 0.2);
 }
 
-/* Cine Center Theme (Bolivia) */
+/* ========================================
+   Theme: Cine Center (Dark Gold/Amber)
+   ======================================== */
 .theme-cine-center {
-  --bg-color: #080808; /* Cinematic deep black */
-  --surface-color: rgba(227, 0, 27, 0.04);
-  --surface-hover: rgba(227, 0, 27, 0.08);
-  --border-color: rgba(227, 0, 27, 0.15);
-  --primary-color: #E3001B; /* Aggressive Red */
-  --primary-hover: #B80016;
-  --secondary-color: #FFC72C; /* Popcorn Yellow */
-  --text-main: #FFFFFF;
-  --text-muted: #a3a3a3;
-  --gradient-bg: radial-gradient(circle at 10% 20%, rgba(227, 0, 27, 0.1), transparent 30%), radial-gradient(circle at 90% 80%, rgba(255, 199, 44, 0.05), transparent 30%);
-  --primary-glow: rgba(227, 0, 27, 0.2);
+  --bg-color: #131314;
+  --surface-color: rgba(32, 31, 32, 0.95);
+  --surface-hover: rgba(42, 42, 43, 0.95);
+  --surface-high: #2a2a2b;
+  --surface-low: #1c1b1c;
+  --surface-bright: #3a393a;
+  --border-color: rgba(81, 69, 50, 0.3);
+  --primary-color: #ffb800;
+  --primary-hover: #d99c00;
+  --primary-container: #ffb800;
+  --secondary-color: #dcc839;
+  --secondary-container: #ae9c00;
+  --text-main: #e5e2e3;
+  --text-muted: #9e8f78;
+  --text-on-primary: #131314;
+  --danger-color: #ffb4ab;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --gradient-bg: radial-gradient(circle at 10% 20%, rgba(255, 184, 0, 0.06), transparent 30%),
+                 radial-gradient(circle at 90% 80%, rgba(220, 200, 57, 0.04), transparent 30%);
+  --primary-glow: rgba(255, 184, 0, 0.15);
 }
 
-/* Capresso Theme */
+/* ========================================
+   Theme: Capresso (Warm Light Coffee)
+   ======================================== */
 .theme-capresso {
-  --bg-color: #171311; /* Deep espresso */
-  --surface-color: rgba(212, 129, 53, 0.05);
-  --surface-hover: rgba(212, 129, 53, 0.1);
-  --border-color: rgba(212, 129, 53, 0.2);
-  --primary-color: #D48135; /* Crema/Caramel */
-  --primary-hover: #B56828;
-  --secondary-color: #8C5E3C;
-  --text-main: #F5E6D3; /* Warm off-white */
-  --text-muted: #b8a696;
-  --gradient-bg: radial-gradient(circle at 20% 80%, rgba(212, 129, 53, 0.08), transparent 40%), radial-gradient(circle at 80% 20%, rgba(140, 94, 60, 0.08), transparent 40%);
-  --primary-glow: rgba(212, 129, 53, 0.2);
+  --bg-color: #f9f9f8;
+  --surface-color: #ffffff;
+  --surface-hover: #f4f4f3;
+  --surface-high: #e8e8e7;
+  --surface-low: #f4f4f3;
+  --surface-bright: #f9f9f8;
+  --border-color: rgba(211, 195, 192, 0.3);
+  --primary-color: #271310;
+  --primary-hover: #3e2723;
+  --primary-container: #3e2723;
+  --secondary-color: #655d5a;
+  --secondary-container: #ece0dc;
+  --tertiary-color: #001e05;
+  --text-main: #1a1c1c;
+  --text-muted: #504442;
+  --text-on-primary: #ffffff;
+  --danger-color: #ba1a1a;
+  --success-color: #00350f;
+  --warning-color: #f59e0b;
+  --font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  --gradient-bg: none;
+  --primary-glow: rgba(62, 39, 35, 0.1);
+  --glass-blur: blur(0px);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* WeWork / Modern Meetings Theme */
+/* ========================================
+   Theme: WeWork (Clean Professional B&W + Blue)
+   ======================================== */
 .theme-wework {
-  --bg-color: #04121a; /* Very dark tech blue */
-  --surface-color: rgba(0, 168, 232, 0.05);
-  --surface-hover: rgba(0, 168, 232, 0.1);
-  --border-color: rgba(0, 168, 232, 0.2);
-  --primary-color: #00A8E8; /* Corporate Cyan */
-  --primary-hover: #0084B5;
-  --secondary-color: #38A3A5;
-  --text-main: #FFFFFF;
-  --text-muted: #90a4ae;
-  --gradient-bg: radial-gradient(circle at 50% 0%, rgba(0, 168, 232, 0.1), transparent 40%), radial-gradient(circle at 50% 100%, rgba(56, 163, 165, 0.1), transparent 40%);
-  --primary-glow: rgba(0, 168, 232, 0.2);
+  --bg-color: #fbf9f9;
+  --surface-color: #fbf9f9;
+  --surface-hover: #f5f3f3;
+  --surface-high: #efeded;
+  --surface-low: #ffffff;
+  --surface-bright: #ffffff;
+  --border-color: #cfc4c5;
+  --primary-color: #000000;
+  --primary-hover: #1b1b1b;
+  --primary-container: #1b1b1b;
+  --secondary-color: #0042c7;
+  --secondary-container: #0056fd;
+  --text-main: #1b1c1c;
+  --text-muted: #4c4546;
+  --text-on-primary: #ffffff;
+  --danger-color: #ba1a1a;
+  --success-color: #00350f;
+  --warning-color: #f59e0b;
+  --font-family: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --gradient-bg: none;
+  --primary-glow: rgba(0, 0, 0, 0.08);
+  --glass-blur: blur(0px);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
+/* ========================================
+   Reset & Base Styles
+   ======================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -85,10 +156,11 @@
 }
 
 body {
-  background-color: var(--bg-color); /* Fallback */
+  background-color: var(--bg-color);
   color: var(--text-main);
   font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -107,7 +179,13 @@ a:hover {
   color: var(--primary-hover);
 }
 
-/* Utilities */
+button {
+  font-family: inherit;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
 .glass-panel {
   background: var(--surface-color);
   backdrop-filter: var(--glass-blur);
@@ -122,4 +200,51 @@ a:hover {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* Scrollbar Hiding */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Material Symbols Filled */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }

@@ -1,7 +1,5 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
   import type { Product } from './ProductCard.svelte';
-  import { ShoppingCart, Trash2 } from 'lucide-svelte';
 
   export interface CartItem {
     product: Product;
@@ -12,180 +10,388 @@
     items,
     total,
     onClearCart,
-    onCheckout
+    onCheckout,
+    onAdd,
+    onRemove,
+    orderNumber = 1042
   } = $props<{
     items: CartItem[];
     total: number;
     onClearCart: () => void;
     onCheckout: () => void;
+    onAdd?: (id: string) => void;
+    onRemove?: (id: string) => void;
+    orderNumber?: number;
   }>();
 
+  const TAX_RATE = 0.08;
+  let subtotal = $derived(total);
+  let tax = $derived(subtotal * TAX_RATE);
+  let grandTotal = $derived(subtotal + tax);
 </script>
 
-<div class="cart-summary glass-panel">
+<div class="cart-panel">
+  <!-- Header -->
   <div class="cart-header">
-    <div class="cart-title">
-      <ShoppingCart size={20} color="var(--primary-color)" />
-      <h2>Tu Pedido</h2>
+    <div>
+      <h2>Pedido Actual</h2>
+      <div class="order-meta">
+        <p class="order-number">Pedido #{orderNumber}</p>
+        <span class="dine-badge">En Local</span>
+      </div>
     </div>
-    {#if items.length > 0}
-      <button class="clear-btn" onclick={onClearCart} aria-label="Clear cart" title="Vaciar pedido">
-        <Trash2 size={16} />
-      </button>
-    {/if}
   </div>
 
-  <div class="cart-items">
+  <!-- Item List -->
+  <div class="cart-items scrollbar-hide">
     {#if items.length === 0}
       <div class="empty-cart">
+        <span class="material-symbols-outlined empty-icon">shopping_cart</span>
         <p>No has agregado ningún producto todavía.</p>
       </div>
     {:else}
       {#each items as item}
         <div class="cart-item">
-          <div class="item-details">
-            <span class="item-name">{item.product.name}</span>
-            <span class="item-quantity">x{item.quantity}</span>
+          <div class="item-top">
+            <div class="item-info">
+              <h4>{item.product.name}</h4>
+              <p class="item-note">Preparación estándar</p>
+            </div>
+            <span class="item-total">${(item.product.price * item.quantity).toFixed(2)}</span>
           </div>
-          <span class="item-price">${(item.product.price * item.quantity).toFixed(2)}</span>
+          <div class="item-bottom">
+            <button 
+              class="remove-btn"
+              onclick={() => {
+                if (onRemove) {
+                  for (let i = 0; i < item.quantity; i++) {
+                    onRemove(item.product.id);
+                  }
+                }
+              }}
+            >
+              <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+              Quitar
+            </button>
+            <div class="item-qty-controls">
+              <button 
+                class="item-qty-btn"
+                onclick={() => onRemove?.(item.product.id)}
+                aria-label="Reducir"
+              >
+                <span class="material-symbols-outlined" style="font-size: 16px;">remove</span>
+              </button>
+              <span class="item-qty">{item.quantity}</span>
+              <button 
+                class="item-qty-btn"
+                onclick={() => onAdd?.(item.product.id)}
+                aria-label="Agregar"
+              >
+                <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+              </button>
+            </div>
+          </div>
         </div>
       {/each}
     {/if}
   </div>
 
+  <!-- Totals & Checkout -->
   <div class="cart-footer">
-    <div class="total-row">
-      <span>Total:</span>
-      <span class="total-amount text-gradient">${total.toFixed(2)}</span>
+    <div class="totals">
+      <div class="total-line">
+        <span>Subtotal</span>
+        <span>${subtotal.toFixed(2)}</span>
+      </div>
+      <div class="total-line">
+        <span>Impuesto (8%)</span>
+        <span>${tax.toFixed(2)}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="total-line grand">
+        <span>Total</span>
+        <span class="grand-amount">${grandTotal.toFixed(2)}</span>
+      </div>
     </div>
-    
-    <Button 
-      variant="primary" 
+
+    <!-- Payment Method Buttons -->
+    <div class="payment-methods">
+      <button class="payment-btn">
+        <span class="material-symbols-outlined" style="font-size: 20px;">credit_card</span>
+        Tarjeta
+      </button>
+      <button class="payment-btn">
+        <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+        Efectivo
+      </button>
+    </div>
+
+    <button 
+      class="finalize-btn"
       disabled={items.length === 0}
       onclick={onCheckout}
-      style="width: 100%;"
     >
       Procesar Pedido
-    </Button>
+      <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+    </button>
   </div>
 </div>
 
 <style>
-  .cart-summary {
-    padding: var(--spacing-lg);
+  .cart-panel {
     display: flex;
     flex-direction: column;
     height: 100%;
-    max-height: calc(100vh - 150px);
+    background: var(--surface-color);
+    border-left: 1px solid var(--border-color);
+    box-shadow: -4px 0 15px -3px rgba(0, 0, 0, 0.05);
   }
 
+  /* Header */
   .cart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
+    background: var(--surface-bright);
   }
 
-  .cart-title {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
+  .cart-header h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 4px;
   }
 
-  .cart-title h2 {
-    font-size: 1.25rem;
-    margin: 0;
-  }
-
-  .clear-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: var(--spacing-xs);
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-  }
-
-  .clear-btn:hover {
-    color: var(--danger-color);
-    background: rgba(239, 68, 68, 0.1);
-  }
-
-  .cart-items {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-    padding-right: var(--spacing-xs);
-  }
-
-  /* Custom Scrollbar for webkit */
-  .cart-items::-webkit-scrollbar {
-    width: 6px;
-  }
-  .cart-items::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .cart-items::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
-    border-radius: 10px;
-  }
-
-  .empty-cart {
-    color: var(--text-muted);
-    font-style: italic;
-    text-align: center;
-    padding: var(--spacing-xl) 0;
-  }
-
-  .cart-item {
+  .order-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-sm);
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: var(--radius-sm);
   }
 
-  .item-details {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .item-name {
-    font-weight: 500;
-  }
-
-  .item-quantity {
+  .order-number {
     font-size: 0.85rem;
-    color: var(--primary-color);
+    color: var(--text-muted);
   }
 
-  .item-price {
+  .dine-badge {
+    background: rgba(0, 53, 15, 0.1);
+    color: var(--success-color);
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
     font-weight: 600;
   }
 
-  .cart-footer {
-    border-top: 1px dashed var(--border-color);
-    padding-top: var(--spacing-md);
-    margin-top: auto;
+  /* Item List */
+  .cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
   }
 
-  .total-row {
+  .empty-cart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-2xl) 0;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .empty-icon {
+    font-size: 48px !important;
+    opacity: 0.3;
+  }
+
+  .cart-item {
+    padding: 12px;
+    background: var(--bg-color);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+  }
+
+  .item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .item-info h4 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .item-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 2px 0 0 0;
+  }
+
+  .item-total {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .item-bottom {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1.2rem;
-    font-weight: bold;
+    margin-top: var(--spacing-sm);
+  }
+
+  .remove-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 4px 0;
+    border-radius: var(--radius-full);
+    transition: opacity var(--transition-fast);
+  }
+
+  .remove-btn:hover {
+    opacity: 0.8;
+  }
+
+  .item-qty-controls {
+    display: flex;
+    align-items: center;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    height: 32px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .item-qty-btn {
+    width: 32px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-fast);
+  }
+
+  .item-qty-btn:hover {
+    background: var(--surface-hover);
+  }
+
+  .item-qty {
+    width: 32px;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* Footer */
+  .cart-footer {
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    background: var(--surface-bright);
+  }
+
+  .totals {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     margin-bottom: var(--spacing-lg);
   }
 
-  .total-amount {
-    font-size: 1.8rem;
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
+  }
+
+  .total-line.grand {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .grand-amount {
+    color: var(--primary-container);
+  }
+
+  /* Payment Methods */
+  .payment-methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .payment-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 12px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+    background: var(--surface-color);
+    color: var(--text-main);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .payment-btn:hover {
+    background: var(--surface-hover);
+  }
+
+  /* Finalize Button */
+  .finalize-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-full);
+    border: none;
+    background: var(--primary-color);
+    color: var(--text-on-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow-sm);
+    font-family: inherit;
+  }
+
+  .finalize-btn:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .finalize-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>

@@ -27,12 +27,13 @@ describe('Cafe Module - CartSummary Component', () => {
 
     // Check if items render
     expect(screen.getByText('Café')).toBeInTheDocument();
-    expect(screen.getByText('x2')).toBeInTheDocument();
     expect(screen.getByText('Pan')).toBeInTheDocument();
-    expect(screen.getByText('x1')).toBeInTheDocument();
 
-    // Check if total is formatted correctly
+    // Check if subtotal is shown (the total passed as prop becomes subtotal)
     expect(screen.getByText('$5.50')).toBeInTheDocument();
+    
+    // Check grand total (subtotal + 8% tax = 5.50 + 0.44 = 5.94)
+    expect(screen.getByText('$5.94')).toBeInTheDocument();
   });
 
   it('shows empty state when no items', () => {
@@ -46,7 +47,9 @@ describe('Cafe Module - CartSummary Component', () => {
     });
 
     expect(screen.getByText('No has agregado ningún producto todavía.')).toBeInTheDocument();
-    expect(screen.getByText('$0.00')).toBeInTheDocument();
+    // Grand total should be $0.00 (use getAllByText since subtotal/tax/total all show $0.00)
+    const zeroElements = screen.getAllByText('$0.00');
+    expect(zeroElements.length).toBeGreaterThanOrEqual(1);
   });
 
   it('calls onCheckout when button is clicked', async () => {

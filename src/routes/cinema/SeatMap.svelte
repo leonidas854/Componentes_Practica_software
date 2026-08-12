@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { Monitor } from 'lucide-svelte';
-  
   export type SeatStatus = 'available' | 'selected' | 'occupied';
   
   export interface Seat {
@@ -18,31 +16,54 @@
     onSeatToggle: (seat: Seat) => void;
   }>();
 
+  // Split each row in half for the aisle gap
+  function leftHalf(row: Seat[]): Seat[] {
+    const mid = Math.ceil(row.length / 2);
+    return row.slice(0, mid);
+  }
+
+  function rightHalf(row: Seat[]): Seat[] {
+    const mid = Math.ceil(row.length / 2);
+    return row.slice(mid);
+  }
 </script>
 
 <div class="seat-map-container">
-  <div class="screen-area">
-    <div class="screen-curve"></div>
-    <span class="screen-text">PANTALLA</span>
+  <!-- The Screen -->
+  <div class="screen-wrapper">
+    <div class="screen-curve">
+      <div class="screen-glow"></div>
+    </div>
+    <span class="screen-label">PANTALLA</span>
   </div>
 
+  <!-- Seat Grid -->
   <div class="seats-grid">
-    {#each seats as row, rowIndex}
+    {#each seats as row}
       <div class="seat-row">
         <span class="row-label">{row[0].row}</span>
         <div class="row-seats">
-          {#each row as seat}
+          {#each leftHalf(row) as seat}
             <button 
-              class="seat {seat.status}"
+              class="seat-btn {seat.status}"
               disabled={seat.status === 'occupied'}
               onclick={() => onSeatToggle(seat)}
               aria-label={`Asiento ${seat.id}`}
               title={seat.id}
             >
-              <!-- Seat SVG representation -->
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 18v3h3v-3h10v3h3v-6H4v3zm15-8h3v3h-3v-3zM2 10h3v3H2v-3zm15 3H7V5c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v8z"/>
-              </svg>
+              {seat.col}
+            </button>
+          {/each}
+          <div class="aisle"></div>
+          {#each rightHalf(row) as seat}
+            <button 
+              class="seat-btn {seat.status}"
+              disabled={seat.status === 'occupied'}
+              onclick={() => onSeatToggle(seat)}
+              aria-label={`Asiento ${seat.id}`}
+              title={seat.id}
+            >
+              {seat.col}
             </button>
           {/each}
         </div>
@@ -51,17 +72,18 @@
     {/each}
   </div>
 
+  <!-- Legend -->
   <div class="legend">
     <div class="legend-item">
-      <div class="seat-sample available"></div>
+      <div class="legend-swatch available"></div>
       <span>Disponible</span>
     </div>
     <div class="legend-item">
-      <div class="seat-sample selected"></div>
+      <div class="legend-swatch selected"></div>
       <span>Seleccionado</span>
     </div>
     <div class="legend-item">
-      <div class="seat-sample occupied"></div>
+      <div class="legend-swatch occupied"></div>
       <span>Ocupado</span>
     </div>
   </div>
@@ -72,124 +94,153 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background: var(--surface-color);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
+    gap: var(--spacing-lg);
   }
 
-  .screen-area {
+  /* Screen */
+  .screen-wrapper {
     width: 100%;
     max-width: 600px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
   }
 
   .screen-curve {
     width: 100%;
-    height: 40px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
-    border-top: 4px solid var(--primary-color);
+    height: 48px;
     border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-    box-shadow: 0 10px 20px var(--primary-glow);
+    background: var(--surface-high);
+    border-bottom: 4px solid rgba(255, 184, 0, 0.3);
+    position: relative;
+    overflow: hidden;
   }
 
-  .screen-text {
-    font-size: 0.8rem;
+  .screen-glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(255, 222, 168, 0.15), transparent);
+  }
+
+  .screen-label {
+    font-size: 0.7rem;
     color: var(--text-muted);
     letter-spacing: 0.2em;
+    text-transform: uppercase;
   }
 
+  /* Seats Grid */
   .seats-grid {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--surface-low);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
   }
 
   .seat-row {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
   }
 
   .row-label {
-    width: 20px;
+    width: 24px;
     text-align: center;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-muted);
   }
 
   .row-seats {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 6px;
+    align-items: center;
   }
 
-  .seat {
-    background: none;
-    border: none;
-    padding: 0;
+  .aisle {
+    width: 16px;
+  }
+
+  /* Seat Button */
+  .seat-btn {
     width: 32px;
     height: 32px;
+    border-radius: 8px 8px 4px 4px;
+    border: 1px solid var(--border-color);
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
-    transition: transform var(--transition-fast), color var(--transition-fast);
-    color: var(--border-color); /* default for available */
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
 
-  .seat svg {
-    width: 100%;
-    height: 100%;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  .seat-btn.available {
+    background-color: #353436;
+    color: #e5e2e3;
+    border-color: rgba(81, 69, 50, 0.5);
   }
 
-  .seat:hover:not(:disabled) {
-    transform: scale(1.1);
-    color: rgba(255, 255, 255, 0.5);
+  .seat-btn.available:hover {
+    background-color: #414756;
+    border-color: #414756;
+    transform: scale(1.08);
   }
 
-  .seat.available {
-    color: var(--text-muted);
+  .seat-btn.selected {
+    background-color: #ffb800;
+    color: #131314;
+    border-color: #ffb800;
+    box-shadow: 0 0 12px rgba(255, 184, 0, 0.4);
   }
 
-  .seat.selected {
-    color: var(--primary-color);
-    filter: drop-shadow(0 0 8px var(--primary-color));
-  }
-
-  .seat.occupied {
-    color: var(--danger-color);
+  .seat-btn.occupied {
+    background-color: var(--surface-low);
+    color: rgba(81, 69, 50, 0.5);
+    border-color: transparent;
     cursor: not-allowed;
     opacity: 0.5;
   }
 
+  /* Legend */
   .legend {
     display: flex;
     gap: var(--spacing-xl);
-    margin-top: var(--spacing-lg);
-    padding-top: var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-    width: 100%;
-    justify-content: center;
+    padding-top: var(--spacing-md);
   }
 
   .legend-item {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    font-size: 0.8rem;
     color: var(--text-muted);
-    font-size: 0.9rem;
   }
 
-  .seat-sample {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
+  .legend-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
   }
 
-  .seat-sample.available { background-color: var(--text-muted); }
-  .seat-sample.selected { background-color: var(--primary-color); }
-  .seat-sample.occupied { background-color: var(--danger-color); }
+  .legend-swatch.available {
+    background-color: #353436;
+    border: 1px solid rgba(81, 69, 50, 0.5);
+  }
+  .legend-swatch.selected {
+    background-color: #ffb800;
+    border: 1px solid #ffb800;
+  }
+  .legend-swatch.occupied {
+    background-color: var(--surface-low);
+    border: 1px solid transparent;
+  }
 </style>
