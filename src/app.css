@@ -1,0 +1,125 @@
+:root {
+  /* Default / Dashboard (Premium Indigo/Dark) */
+  --bg-color: #0b0f19;
+  --surface-color: rgba(23, 28, 40, 0.6);
+  --surface-hover: rgba(30, 36, 52, 0.8);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --primary-color: #6366f1; /* Indigo */
+  --primary-hover: #4f46e5;
+  --secondary-color: #ec4899; /* Pink */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --danger-color: #ef4444;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+
+  /* Typography & Effects */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-base: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --glass-blur: blur(12px);
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --gradient-bg: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
+  --primary-glow: rgba(99, 102, 241, 0.2);
+}
+
+/* Cine Center Theme (Bolivia) */
+.theme-cine-center {
+  --bg-color: #080808; /* Cinematic deep black */
+  --surface-color: rgba(227, 0, 27, 0.04);
+  --surface-hover: rgba(227, 0, 27, 0.08);
+  --border-color: rgba(227, 0, 27, 0.15);
+  --primary-color: #E3001B; /* Aggressive Red */
+  --primary-hover: #B80016;
+  --secondary-color: #FFC72C; /* Popcorn Yellow */
+  --text-main: #FFFFFF;
+  --text-muted: #a3a3a3;
+  --gradient-bg: radial-gradient(circle at 10% 20%, rgba(227, 0, 27, 0.1), transparent 30%), radial-gradient(circle at 90% 80%, rgba(255, 199, 44, 0.05), transparent 30%);
+  --primary-glow: rgba(227, 0, 27, 0.2);
+}
+
+/* Capresso Theme */
+.theme-capresso {
+  --bg-color: #171311; /* Deep espresso */
+  --surface-color: rgba(212, 129, 53, 0.05);
+  --surface-hover: rgba(212, 129, 53, 0.1);
+  --border-color: rgba(212, 129, 53, 0.2);
+  --primary-color: #D48135; /* Crema/Caramel */
+  --primary-hover: #B56828;
+  --secondary-color: #8C5E3C;
+  --text-main: #F5E6D3; /* Warm off-white */
+  --text-muted: #b8a696;
+  --gradient-bg: radial-gradient(circle at 20% 80%, rgba(212, 129, 53, 0.08), transparent 40%), radial-gradient(circle at 80% 20%, rgba(140, 94, 60, 0.08), transparent 40%);
+  --primary-glow: rgba(212, 129, 53, 0.2);
+}
+
+/* WeWork / Modern Meetings Theme */
+.theme-wework {
+  --bg-color: #04121a; /* Very dark tech blue */
+  --surface-color: rgba(0, 168, 232, 0.05);
+  --surface-hover: rgba(0, 168, 232, 0.1);
+  --border-color: rgba(0, 168, 232, 0.2);
+  --primary-color: #00A8E8; /* Corporate Cyan */
+  --primary-hover: #0084B5;
+  --secondary-color: #38A3A5;
+  --text-main: #FFFFFF;
+  --text-muted: #90a4ae;
+  --gradient-bg: radial-gradient(circle at 50% 0%, rgba(0, 168, 232, 0.1), transparent 40%), radial-gradient(circle at 50% 100%, rgba(56, 163, 165, 0.1), transparent 40%);
+  --primary-glow: rgba(0, 168, 232, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color); /* Fallback */
+  color: var(--text-main);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-main);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Utilities */
+.glass-panel {
+  background: var(--surface-color);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.text-gradient {
+  background-image: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
