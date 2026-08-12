@@ -1,455 +1,327 @@
 <script lang="ts">
-  import ProductCard from './ProductCard.svelte';
-  import type { Product } from './ProductCard.svelte';
-  import CartSummary from './CartSummary.svelte';
-  import type { CartItem } from './CartSummary.svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
+  import Input from '$lib/components/Input.svelte';
+  import Select from '$lib/components/Select.svelte';
+  import TopNav from '$lib/components/TopNav.svelte';
+  import { toast } from '$lib/stores/toast.svelte';
+  import { formatCurrency } from '$lib/utils/format';
 
-  // Categories
-  interface Category {
-    id: string;
-    name: string;
-    icon: string;
-  }
+  import CartSummary from './components/CartSummary.svelte';
+  import CategoryNav from './components/CategoryNav.svelte';
+  import ProductCard from './components/ProductCard.svelte';
+  import ReceiptDialog from './components/ReceiptDialog.svelte';
 
-  const CATEGORIES: Category[] = [
-    { id: 'coffee', name: 'Café', icon: 'coffee' },
-    { id: 'tea', name: 'Té', icon: 'emoji_food_beverage' },
-    { id: 'pastry', name: 'Pasteles', icon: 'bakery_dining' },
-    { id: 'sandwich', name: 'Sándwiches', icon: 'lunch_dining' },
-    { id: 'cold', name: 'Bebidas Frías', icon: 'local_drink' },
+  import { CATEGORIES, MENU, countByCategory, filterMenu } from './data/menu';
+  import { Order, type Receipt } from './models/Order.svelte';
+  import type { Product, ServiceMode } from './models/types';
+
+  /**
+   * PRÁCTICA 2 — Registro de pedidos de una cafetería.
+   *
+   * El problema original era el cálculo manual del importe y la falta de un
+   * resumen del pedido. Aquí la clase Order calcula todos los importes y el
+   * comprobante final detalla qué productos se solicitaron.
+   */
+
+  // ----- Estado -----
+  let order = $state<Order>(new Order());
+  let selectedCategory = $state<string | null>(null);
+  let searchTerm = $state('');
+  /** Criterio de ordenación de la carta: 'name' | 'price-asc' | 'price-desc'. */
+  let sortMode = $state('name');
+
+  let showReceipt = $state(false);
+  let lastReceipt = $state<Receipt | null>(null);
+
+  // ----- Datos derivados -----
+  const categoryCounts = countByCategory(MENU);
+
+  let visibleProducts = $derived.by(() => {
+    const filtered = filterMenu(MENU, selectedCategory, searchTerm);
+
+    return [...filtered].sort((a, b) => {
+      if (sortMode === 'price-asc') return a.price - b.price;
+      if (sortMode === 'price-desc') return b.price - a.price;
+      return a.name.localeCompare(b.name, 'es');
+    });
+  });
+
+  let currentCategoryName = $derived(
+    selectedCategory === null
+      ? 'Toda la carta'
+      : (CATEGORIES.find((category) => category.id === selectedCategory)?.name ?? 'Carta')
+  );
+
+  const SORT_OPTIONS = [
+    { value: 'name', label: 'Nombre (A-Z)' },
+    { value: 'price-asc', label: 'Precio: menor a mayor' },
+    { value: 'price-desc', label: 'Precio: mayor a menor' }
   ];
 
-  const MENU: Product[] = [
-    { 
-      id: 'c1', name: 'Espresso', description: 'Shot intenso y aromático.', price: 3.50,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxS7jguWm0paCAWtu-WRpUH1y2i6aPhR5M4JAgwqp1Vns_TChhyzbzQUDZ4hV7wnYU9-7fA1QT_IzEwJOe7Jt3mcNA1vxcv0PvcusJARGqdloppmi-3awrgaigvewnovDX1W0FN9m5K4Vt0JKCYDaT8dhWs9EQMU-xBXUlR_H9uWFOBAhv3XosRn0pPlYdEkWWqtg29WNHWzf1CWKbH7mPYWoY1ZjfKnMj2zHRefTfY_BPpRDv397VuA',
-      popular: true
-    },
-    { 
-      id: 'c2', name: 'Café Latte', description: 'Espresso suave con leche vaporizada.', price: 4.75,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDCiHh9jA4Cd-lFRpdYqHZw35Iq0UISYsVDMZWWdkXxWgQ4FxKbrEdfVVdylAGc3LImrk_f_TN1uHoVBPNnYge6Rq8GruDterIqPzJT7ZtyGVmXmZe9UJ3ocbppkpar5TDlG6cDyEWVKTWEY-5wGu5JNSEtWVss_fc_Wcrf-Z6W_9BIGzc21d_jmeebx4hqsiSYeF-zEDt2l9AlsZ2LlmyUTocnVQbt8IJ4ES8m5bJ18AqHCv9XCreGwA'
-    },
-    { 
-      id: 'c3', name: 'Cappuccino', description: 'Partes iguales de espresso, leche y espuma.', price: 4.50,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5XduItZXm51gjpspUPpInas4to6t0KbvC5eOGqw-9tcbQosf5e0vHcBr14_i0F_Aqsu_D8bwEQiGhfA2dHZAmf9i43hVX1B7_bED2hsT2CH1X4SHQjoTeKWuCYiMr7ZyeoDcqJ2Ncyj_kzQDJzoY-M2bmz1eLfTh5GQouOzODg_3RleJM0rBObWZ4EYHHg_5xQ7_X6i-LTHqhBntfmHK2IwhP8cQG4kgNjchevDgvDwbk4DM6lipcqw'
-    },
-    { 
-      id: 'c4', name: 'Americano', description: 'Espresso diluido con agua caliente.', price: 3.75,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI6RKg2FmDiYCTD_Ax4nOekjOLpgfbGTFG0BGAodT7MPgJGgpq8MzlVGgn_0oAO3VZhme6ciydq0nqjVxgZlRqFi2qXUjv7su9ggx-H7iC_U90iNK73U5dIDxTRc3bs_qnpKRLAsXOE_sia4c_5LqWQHs9dxtf28ZjA0V04ZrDSYYzapa6z5YEM59BubtbEd1JFRRgkZJ2BFKm-JJ8INdSHZAzFQ8HRdy8EJrR1mQty-uLqVgf2S1xUA'
-    },
-    { 
-      id: 'c5', name: 'Mocha Blanco', description: 'Chocolate blanco, espresso y crema batida.', price: 5.25,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxS7jguWm0paCAWtu-WRpUH1y2i6aPhR5M4JAgwqp1Vns_TChhyzbzQUDZ4hV7wnYU9-7fA1QT_IzEwJOe7Jt3mcNA1vxcv0PvcusJARGqdloppmi-3awrgaigvewnovDX1W0FN9m5K4Vt0JKCYDaT8dhWs9EQMU-xBXUlR_H9uWFOBAhv3XosRn0pPlYdEkWWqtg29WNHWzf1CWKbH7mPYWoY1ZjfKnMj2zHRefTfY_BPpRDv397VuA',
-      popular: true
-    },
-    { 
-      id: 's1', name: 'Croissant Mantequilla', description: 'Pan hojaldrado clásico recién horneado.', price: 3.50,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5XduItZXm51gjpspUPpInas4to6t0KbvC5eOGqw-9tcbQosf5e0vHcBr14_i0F_Aqsu_D8bwEQiGhfA2dHZAmf9i43hVX1B7_bED2hsT2CH1X4SHQjoTeKWuCYiMr7ZyeoDcqJ2Ncyj_kzQDJzoY-M2bmz1eLfTh5GQouOzODg_3RleJM0rBObWZ4EYHHg_5xQ7_X6i-LTHqhBntfmHK2IwhP8cQG4kgNjchevDgvDwbk4DM6lipcqw'
-    },
-    { 
-      id: 's2', name: 'Muffin de Arándanos', description: 'Esponjoso muffin con arándanos frescos.', price: 2.50,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDCiHh9jA4Cd-lFRpdYqHZw35Iq0UISYsVDMZWWdkXxWgQ4FxKbrEdfVVdylAGc3LImrk_f_TN1uHoVBPNnYge6Rq8GruDterIqPzJT7ZtyGVmXmZe9UJ3ocbppkpar5TDlG6cDyEWVKTWEY-5wGu5JNSEtWVss_fc_Wcrf-Z6W_9BIGzc21d_jmeebx4hqsiSYeF-zEDt2l9AlsZ2LlmyUTocnVQbt8IJ4ES8m5bJ18AqHCv9XCreGwA'
-    },
-    { 
-      id: 's3', name: 'Sándwich Pavo', description: 'Pan integral, pavo ahumado, queso y vegetales.', price: 5.50,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI6RKg2FmDiYCTD_Ax4nOekjOLpgfbGTFG0BGAodT7MPgJGgpq8MzlVGgn_0oAO3VZhme6ciydq0nqjVxgZlRqFi2qXUjv7su9ggx-H7iC_U90iNK73U5dIDxTRc3bs_qnpKRLAsXOE_sia4c_5LqWQHs9dxtf28ZjA0V04ZrDSYYzapa6z5YEM59BubtbEd1JFRRgkZJ2BFKm-JJ8INdSHZAzFQ8HRdy8EJrR1mQty-uLqVgf2S1xUA'
+  // ----- Manejadores de eventos -----
+
+  /** EVENTO CLICK (tarjeta de producto): añade una unidad al pedido. */
+  function addProduct(product: Product) {
+    const result = order.add(product);
+    if (!result.ok) {
+      toast.error('No se pudo añadir', result.reason ?? '');
+      return;
     }
-  ];
-
-  // State
-  let selectedCategory = $state('coffee');
-  let cart = $state<Record<string, number>>({});
-
-  // Derived values
-  let cartItems = $derived(
-    Object.entries(cart)
-      .map(([id, quantity]) => {
-        const product = MENU.find(p => p.id === id);
-        return product ? { product, quantity } : null;
-      })
-      .filter((item): item is CartItem => item !== null && item.quantity > 0)
-  );
-
-  let cartTotal = $derived(
-    cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0)
-  );
-
-  // Handlers
-  function handleAdd(id: string) {
-    cart[id] = (cart[id] || 0) + 1;
+    toast.show(`${product.name} añadido`, `Total del pedido: ${formatCurrency(order.total)}`, 'info', 1800);
   }
 
-  function handleRemove(id: string) {
-    if (cart[id] > 0) {
-      cart[id] -= 1;
-      if (cart[id] === 0) {
-        delete cart[id];
-      }
+  /** EVENTO CHANGE (selector de cantidad): fija la cantidad exacta. */
+  function setQuantity(productId: string, quantity: number) {
+    const result = order.setQuantity(productId, quantity);
+    if (!result.ok && quantity > 0) {
+      toast.error('Cantidad no válida', result.reason ?? '');
     }
   }
 
-  function handleClearCart() {
-    cart = {};
+  /** EVENTO INPUT (nota de la línea). */
+  function setNote(productId: string, note: string) {
+    order.setNote(productId, note);
   }
 
-  function handleCheckout() {
-    if (cartItems.length === 0) return;
-    const tax = cartTotal * 0.08;
-    const grandTotal = cartTotal + tax;
-    alert(`¡Pedido registrado exitosamente!\nSubtotal: $${cartTotal.toFixed(2)}\nImpuesto: $${tax.toFixed(2)}\nTotal cobrado: $${grandTotal.toFixed(2)}`);
-    handleClearCart();
+  function removeProduct(productId: string) {
+    const name = order.findLine(productId)?.product.name;
+    order.remove(productId);
+    if (name) toast.show(`${name} quitado del pedido`);
+  }
+
+  function changeServiceMode(mode: ServiceMode) {
+    order.serviceMode = mode;
+  }
+
+  function clearOrder() {
+    if (order.isEmpty) return;
+    order.clear();
+    toast.show('Pedido vaciado', 'Puedes comenzar de nuevo.');
+  }
+
+  /** EVENTO CLICK (procesar): genera el comprobante con el resumen del pedido. */
+  function checkout() {
+    if (order.isEmpty) return;
+    lastReceipt = order.toReceipt();
+    showReceipt = true;
+  }
+
+  /** Cierra el comprobante y abre un pedido nuevo con numeración correlativa. */
+  function startNewOrder() {
+    showReceipt = false;
+    order = new Order();
+    toast.success('Pedido cobrado', `Comprobante #${lastReceipt?.number} emitido.`);
+  }
+
+  /** EVENTO KEYDOWN: la tecla Escape limpia el buscador. */
+  function handleSearchKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      searchTerm = '';
+    }
   }
 </script>
 
-<!-- TopNavBar -->
-<header class="top-nav">
-  <div class="nav-inner">
-    <div class="nav-left">
-      <span class="material-symbols-outlined brand-icon" style="font-size: 28px; font-variation-settings: 'FILL' 1;">local_cafe</span>
-      <a href="/" class="brand">Capresso</a>
-      <nav class="nav-links">
-        <a href="/cafe" class="nav-link active">Menú</a>
-        <a href="/cafe" class="nav-link">Pedidos</a>
-        <a href="/cafe" class="nav-link">Inventario</a>
-      </nav>
-    </div>
-    <div class="nav-right">
-      <button class="nav-icon-btn" aria-label="Buscar">
-        <span class="material-symbols-outlined">search</span>
-      </button>
-      <button class="nav-icon-btn" aria-label="Configuración">
-        <span class="material-symbols-outlined">settings</span>
-      </button>
-      <div class="avatar">JD</div>
-    </div>
-  </div>
-</header>
+<TopNav
+  brand="Capresso"
+  brandIcon="local_cafe"
+  links={[
+    { href: '/cinema', label: 'Cartelera' },
+    { href: '/cafe', label: 'Carta' },
+    { href: '/meetings', label: 'Salas' }
+  ]} />
 
-<main class="cafe-layout">
-  <!-- Left Sidebar: Categories -->
-  <aside class="category-sidebar scrollbar-hide">
-    <h2 class="sidebar-title">Categorías</h2>
-    <nav class="category-list">
-      {#each CATEGORIES as cat}
-        <button 
-          class="category-btn"
-          class:active={selectedCategory === cat.id}
-          onclick={() => selectedCategory = cat.id}
-        >
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">{cat.icon}</span>
-          <span>{cat.name}</span>
-        </button>
-      {/each}
-    </nav>
+<div class="cafe-layout">
+  <!-- Columna izquierda: categorías -->
+  <aside class="category-column">
+    <CategoryNav
+      categories={CATEGORIES}
+      selectedId={selectedCategory}
+      counts={categoryCounts}
+      totalCount={MENU.length}
+      onSelect={(id) => (selectedCategory = id)} />
   </aside>
 
-  <!-- Center: Product Grid -->
-  <section class="products-area scrollbar-hide">
-    <div class="products-header">
-      <h1>Menú de Café</h1>
-      <div class="filter-chips">
-        <button class="filter-chip active">Caliente</button>
-        <button class="filter-chip">Helado</button>
+  <!-- Columna central: carta -->
+  <main class="menu-column scrollbar-hide">
+    <header class="menu-header">
+      <div class="menu-heading">
+        <h1>{currentCategoryName}</h1>
+        <p class="menu-count">
+          {visibleProducts.length}
+          {visibleProducts.length === 1 ? 'producto' : 'productos'}
+        </p>
       </div>
-    </div>
 
-    <div class="products-grid">
-      {#each MENU as product}
-        <ProductCard 
-          {product} 
-          quantity={cart[product.id] || 0}
-          onAdd={handleAdd}
-          onRemove={handleRemove}
-        />
-      {/each}
-    </div>
-  </section>
+      <div class="menu-controls">
+        <!-- EVENTO INPUT: búsqueda en vivo sobre la carta -->
+        <Input
+          type="search"
+          placeholder="Buscar producto…"
+          icon="search"
+          class="search-field"
+          bind:value={searchTerm}
+          onkeydown={handleSearchKeydown} />
 
-  <!-- Right Panel: Cart -->
-  <aside class="cart-panel-wrap">
-    <CartSummary 
-      items={cartItems}
-      total={cartTotal}
-      onClearCart={handleClearCart}
-      onCheckout={handleCheckout}
-      onAdd={handleAdd}
-      onRemove={handleRemove}
-    />
-  </aside>
-</main>
+        <!-- EVENTO CHANGE: criterio de ordenación -->
+        <Select options={SORT_OPTIONS} class="sort-field" bind:value={sortMode} />
+      </div>
+    </header>
+
+    {#if visibleProducts.length === 0}
+      <EmptyState
+        icon="search_off"
+        title="Sin resultados"
+        description="Prueba con otro término o cambia de categoría." />
+    {:else}
+      <div class="products-grid">
+        {#each visibleProducts as product (product.id)}
+          <ProductCard
+            {product}
+            quantity={order.quantityOf(product.id)}
+            onAdd={addProduct}
+            onSetQuantity={setQuantity} />
+        {/each}
+      </div>
+    {/if}
+  </main>
+
+  <!-- Columna derecha: pedido -->
+  <div class="cart-column">
+    <CartSummary
+      {order}
+      onSetQuantity={setQuantity}
+      onSetNote={setNote}
+      onRemove={removeProduct}
+      onServiceModeChange={changeServiceMode}
+      onClear={clearOrder}
+      onCheckout={checkout} />
+  </div>
+</div>
+
+<ReceiptDialog
+  open={showReceipt}
+  receipt={lastReceipt}
+  onClose={() => (showReceipt = false)}
+  onNewOrder={startNewOrder} />
 
 <style>
-  /* ===== Top Navigation ===== */
-  .top-nav {
-    background: var(--surface-color);
-    border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .nav-inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 var(--spacing-lg);
-    height: 64px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .nav-left {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-  }
-
-  .brand-icon {
-    color: var(--primary-container);
-  }
-
-  .brand {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--primary-color) !important;
-    margin-right: var(--spacing-xl);
-  }
-
-  .nav-links {
-    display: none;
-    gap: var(--spacing-xl);
-    height: 64px;
-  }
-
-  @media (min-width: 768px) {
-    .nav-links {
-      display: flex;
-    }
-  }
-
-  .nav-link {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 100%;
-    padding: 0 var(--spacing-sm);
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-muted) !important;
-    letter-spacing: 0.02em;
-    border-bottom: 2px solid transparent;
-    padding-bottom: 2px;
-    transition: color var(--transition-fast);
-  }
-
-  .nav-link:hover {
-    color: var(--primary-color) !important;
-  }
-
-  .nav-link.active {
-    color: var(--primary-color) !important;
-    border-bottom-color: var(--primary-color);
-  }
-
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-  }
-
-  .nav-icon-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: color var(--transition-fast);
-    display: flex;
-    align-items: center;
-  }
-
-  .nav-icon-btn:hover {
-    color: var(--primary-color);
-  }
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    color: var(--text-on-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.75rem;
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-  }
-
-  /* ===== Main Layout ===== */
   .cafe-layout {
-    display: flex;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 360px;
     flex: 1;
-    overflow: hidden;
-    max-width: 1200px;
+    max-width: 1500px;
     margin: 0 auto;
     width: 100%;
     animation: fadeIn var(--transition-normal);
   }
 
-  /* ===== Category Sidebar ===== */
-  .category-sidebar {
-    width: 256px;
-    flex-shrink: 0;
-    background: var(--surface-low);
+  .category-column {
     border-right: 1px solid var(--border-color);
-    padding: var(--spacing-md);
-    overflow-y: auto;
     height: calc(100vh - 64px);
-    display: none;
+    overflow-y: auto;
+    position: sticky;
+    top: 64px;
   }
 
-  @media (min-width: 1024px) {
-    .category-sidebar {
-      display: flex;
-      flex-direction: column;
-    }
+  .menu-column {
+    padding: var(--spacing-xl);
+    height: calc(100vh - 64px);
+    overflow-y: auto;
   }
 
-  .sidebar-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: var(--spacing-lg);
-    padding: 0 var(--spacing-md);
+  .cart-column {
+    height: calc(100vh - 64px);
+    position: sticky;
+    top: 64px;
   }
 
-  .category-list {
+  /* Cabecera de la carta */
+  .menu-header {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
-  }
-
-  .category-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    text-align: left;
-    padding: 12px var(--spacing-md);
-    border: none;
-    border-radius: var(--radius-full);
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    font-family: inherit;
-    letter-spacing: 0.02em;
-  }
-
-  .category-btn:hover {
-    background: var(--surface-hover);
-  }
-
-  .category-btn.active {
-    background: var(--secondary-container);
-    color: var(--text-muted);
-    font-weight: 700;
-  }
-
-  /* ===== Products Area ===== */
-  .products-area {
-    flex: 1;
-    padding: var(--spacing-lg);
-    overflow-y: auto;
-    height: calc(100vh - 64px);
-  }
-
-  .products-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
   }
 
-  .products-header h1 {
-    font-size: 1.5rem;
-    font-weight: 500;
+  .menu-heading h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
-  .filter-chips {
-    display: flex;
-    gap: var(--spacing-sm);
-  }
-
-  .filter-chip {
-    padding: 8px 16px;
-    border-radius: var(--radius-full);
-    border: 1px solid var(--border-color);
-    background: transparent;
+  .menu-count {
+    font-size: 0.85rem;
     color: var(--text-muted);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    font-family: inherit;
-    letter-spacing: 0.02em;
+    margin-top: 2px;
   }
 
-  .filter-chip:hover {
-    background: var(--surface-hover);
+  .menu-controls {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: flex-start;
   }
 
-  .filter-chip.active {
-    background: var(--primary-color);
-    color: var(--text-on-primary);
-    border-color: var(--primary-color);
+  .menu-controls :global(.search-field) {
+    max-width: 320px;
+  }
+
+  .menu-controls :global(.sort-field) {
+    max-width: 220px;
   }
 
   .products-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: var(--spacing-md);
   }
 
-  @media (min-width: 768px) {
-    .products-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .products-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  /* ===== Cart Panel ===== */
-  .cart-panel-wrap {
-    width: 360px;
-    flex-shrink: 0;
-    height: calc(100vh - 64px);
-    z-index: 10;
-    display: none;
-  }
-
-  @media (min-width: 1024px) {
-    .cart-panel-wrap {
-      display: block;
-    }
-  }
-
-  /* ===== Responsive ===== */
-  @media (max-width: 1024px) {
+  /* Responsive */
+  @media (max-width: 1200px) {
     .cafe-layout {
-      flex-direction: column;
-      overflow: auto;
+      grid-template-columns: minmax(0, 1fr) 330px;
     }
 
-    .products-area {
+    .category-column {
+      grid-column: 1 / -1;
+      position: static;
       height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border-color);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .cafe-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .menu-column,
+    .cart-column {
+      height: auto;
+      position: static;
+    }
+
+    .cart-column {
+      border-top: 1px solid var(--border-color);
+    }
+
+    .menu-controls {
+      flex-direction: column;
+    }
+
+    .menu-controls :global(.search-field),
+    .menu-controls :global(.sort-field) {
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .menu-column {
+      padding: var(--spacing-md);
+    }
+
+    .menu-heading h1 {
+      font-size: 1.35rem;
     }
   }
 </style>

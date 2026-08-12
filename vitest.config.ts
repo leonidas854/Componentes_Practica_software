@@ -1,13 +1,23 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-// @ts-ignore: testing-library does not export types for /vite yet
+// @ts-ignore: testing-library aún no publica tipos para /vite
 import { svelteTesting } from '@testing-library/svelte/vite';
 
 export default defineConfig({
-  plugins: [svelte(), svelteTesting()],
+  plugins: [
+    svelte({
+      compilerOptions: {
+        // Mismo modo "runes" que usa la aplicación (ver vite.config.ts).
+        runes: ({ filename }) =>
+          filename.split(/[/\\]/).includes('node_modules') ? undefined : true
+      }
+    }),
+    svelteTesting()
+  ],
   resolve: {
     alias: {
-      $lib: '/home/leonidas/deveploment/Componentes_Practica_software/src/lib'
+      $lib: fileURLToPath(new URL('./src/lib', import.meta.url))
     }
   },
   test: {
